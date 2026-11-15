@@ -27,11 +27,24 @@ class OptimizationResultScreen extends StatefulWidget {
 class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
   late OptimizationResult _currentResult;
   int _selectedFilterIndex = 0; // 0: Semua, 1: Wajib, 2: Opsional, 3: Belum Tercapai
+  bool _showSummaryDetail = false;
 
   @override
   void initState() {
     super.initState();
     _currentResult = widget.result;
+  }
+
+  String get _compactSummaryText {
+    final active = _currentResult.activeAllocations;
+    final achieved = _currentResult.achievedAllocations;
+    if (achieved.length == active.length) {
+      if (_currentResult.unallocatedAmount > 0) {
+        return 'Semua ${achieved.length} target tercapai • Sisa ${FormatService.formatRupiah(_currentResult.unallocatedAmount)}';
+      }
+      return 'Semua ${achieved.length} target kategori tercapai 100%.';
+    }
+    return '${achieved.length}/${active.length} target tercapai • Prioritas tinggi diutamakan';
   }
 
   List<AllocationItem> get _filteredAllocations {
@@ -90,17 +103,17 @@ class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sesuaikan Alokasi ${item.categoryName}',
+                    'Sesuaikan ${item.categoryName}',
                     style: Theme.of(ctx).textTheme.titleLarge,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
-                    'Penyesuaian manual akan disimpan sebagai versi baru dengan penanda "Penyesuaian Pengguna" tanpa menimpa hasil optimasi GA asli.',
+                    'Disimpan sebagai salinan baru tanpa mengubah hasil asli GA.',
                     style: Theme.of(ctx).textTheme.bodySmall,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   Text(
-                    'Batas Minimum: ${FormatService.formatRupiah(item.minimumAmount)} • Target: ${FormatService.formatRupiah(item.targetAmount)}',
+                    'Min ${FormatService.formatRupiah(item.minimumAmount)} • Target ${FormatService.formatRupiah(item.targetAmount)}',
                     style: Theme.of(ctx).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
@@ -248,44 +261,49 @@ class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
               ),
               const SizedBox(height: 18),
 
-              // 2. Deretan Pill-Shaped Tabs (All spendings / Wajib / Opsional / Belum Tercapai)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _CategoryFilterPill(
-                      label: 'Semua Alokasi',
+              // 2. Empat Pill Filter Sejajar Penuh (tanpa terpotong tepi kanan)
+              Row(
+                children: [
+                  Expanded(
+                    child: _CategoryFilterPill(
+                      label: 'Semua',
                       isSelected: _selectedFilterIndex == 0,
                       selectedColor: AlokaColors.mustardGold,
                       onTap: () => setState(() => _selectedFilterIndex = 0),
                     ),
-                    const SizedBox(width: 8),
-                    _CategoryFilterPill(
-                      label: 'Kebutuhan Wajib',
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _CategoryFilterPill(
+                      label: 'Wajib',
                       isSelected: _selectedFilterIndex == 1,
                       selectedColor: AlokaColors.pastelLime,
                       onTap: () => setState(() => _selectedFilterIndex = 1),
                     ),
-                    const SizedBox(width: 8),
-                    _CategoryFilterPill(
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _CategoryFilterPill(
                       label: 'Opsional',
                       isSelected: _selectedFilterIndex == 2,
                       selectedColor: AlokaColors.dustyBlush,
                       onTap: () => setState(() => _selectedFilterIndex = 2),
                     ),
-                    const SizedBox(width: 8),
-                    _CategoryFilterPill(
-                      label: 'Belum Tercapai',
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: _CategoryFilterPill(
+                      label: 'Belum',
                       isSelected: _selectedFilterIndex == 3,
                       selectedColor: AlokaColors.surfaceSand,
                       onTap: () => setState(() => _selectedFilterIndex = 3),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // 3. Judul Statistik & Badge Periode Bulanan
+              // 3. Judul Statistik & Badge Skor (tanpa ikon dropdown palsu)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -300,130 +318,159 @@ class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
                       color: AlokaColors.surfaceWhite,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Bulanan • Skor ${FormatService.formatPercentage(_currentResult.fitnessScore)}',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AlokaColors.charcoal,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 16,
-                          color: AlokaColors.charcoal,
-                        ),
-                      ],
+                    child: Text(
+                      'Bulanan • Skor ${FormatService.formatPercentage(_currentResult.fitnessScore)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AlokaColors.charcoal,
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
 
-              // 4. Dua Kartu Statistik Bersebelahan (Total Dialokasikan & Sisa Dana)
-              // Mengacu pada kartu Income (hijau) & Outcome (terracotta) di layar tengah referensi
-              Row(
-                children: [
-                  Expanded(
-                    child: _DualStatProgressCard(
-                      icon: Icons.check_circle_outline_rounded,
-                      iconBg: AlokaColors.pastelLime.withValues(alpha: 0.45),
-                      label: 'Total Dialokasikan',
-                      amountText: FormatService.formatRupiah(allocated),
-                      ratio: allocatedRatio,
-                      barColor: AlokaColors.pastelLime,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DualStatProgressCard(
-                      icon: Icons.account_balance_wallet_outlined,
-                      iconBg: AlokaColors.dustyBlush,
-                      label: 'Sisa Dana',
-                      amountText: FormatService.formatRupiah(unallocated),
-                      ratio: unallocatedRatio,
-                      barColor: AlokaColors.terracotta,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // 5. Kartu Distribusi Proporsi Alokasi (Mengacu pada "Current spend rate" di layar tengah)
-              _AllocationDistributionCard(result: _currentResult),
-              const SizedBox(height: 16),
-
-              // 6. Penjelasan Hasil Optimasi & Perbandingan Simulasi (jika ada hasil sebelumnya)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AlokaColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // 4. Dua Kartu Statistik Sejajar Tinggi (Total Dialokasikan & Sisa Dana)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.info_outline_rounded,
-                          size: 18,
-                          color: AlokaColors.charcoal,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Ringkasan Pemenuhan Target',
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _currentResult.summaryExplanation,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    if (previous != null &&
-                        previous.id != _currentResult.id) ...[
-                      const Divider(height: 22),
-                      Text(
-                        'Perbandingan dengan Hasil Sebelumnya:',
-                        style: Theme.of(context).textTheme.titleSmall,
+                    Expanded(
+                      child: _DualStatProgressCard(
+                        icon: Icons.check_circle_outline_rounded,
+                        iconBg: AlokaColors.pastelLime.withValues(alpha: 0.45),
+                        label: 'Total Dialokasikan',
+                        amountText: FormatService.formatRupiah(allocated),
+                        ratio: allocatedRatio,
+                        barColor: AlokaColors.pastelLime,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '• Skor Fitness: ${FormatService.formatPercentage(previous.fitnessScore)} → ${FormatService.formatPercentage(_currentResult.fitnessScore)}\n'
-                        '• Total Alokasi: ${FormatService.formatRupiah(previous.totalAllocated)} → ${FormatService.formatRupiah(_currentResult.totalAllocated)}\n'
-                        '• Sisa Dana: ${FormatService.formatRupiah(previous.unallocatedAmount)} → ${FormatService.formatRupiah(_currentResult.unallocatedAmount)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AlokaColors.charcoal,
-                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _DualStatProgressCard(
+                        icon: Icons.account_balance_wallet_outlined,
+                        iconBg: AlokaColors.dustyBlush,
+                        label: 'Sisa Dana',
+                        amountText: FormatService.formatRupiah(unallocated),
+                        ratio: unallocatedRatio,
+                        barColor: AlokaColors.terracotta,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
 
-              // 7. Daftar Rincian Kategori (Mengacu pada seksi "My Savings" di layar tengah referensi)
+              // 5. Kartu Distribusi Proporsi Alokasi (semua kategori terlihat tanpa kepotong)
+              _AllocationDistributionCard(result: _currentResult),
+              const SizedBox(height: 14),
+
+              // 6. Ringkasan Singkat (Ketuk untuk detail lengkap)
+              InkWell(
+                onTap: () =>
+                    setState(() => _showSummaryDetail = !_showSummaryDetail),
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: AlokaColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline_rounded,
+                            size: 18,
+                            color: AlokaColors.charcoal,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Ringkasan Pemenuhan Target',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          Icon(
+                            _showSummaryDetail
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            size: 18,
+                            color: AlokaColors.charcoal,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _compactSummaryText,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AlokaColors.charcoal,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                      if (_showSummaryDetail) ...[
+                        const Divider(height: 18),
+                        Text(
+                          _currentResult.summaryExplanation,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AlokaColors.textSecondary,
+                                height: 1.45,
+                              ),
+                        ),
+                        if (previous != null &&
+                            previous.id != _currentResult.id) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Banding sebelumnya: Skor ${FormatService.formatPercentage(previous.fitnessScore)} → ${FormatService.formatPercentage(_currentResult.fitnessScore)}',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AlokaColors.charcoal,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // 7. Daftar Rincian Kategori
               Text(
                 'Rincian Alokasi Kategori',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 12),
 
-              ..._filteredAllocations.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _AllocationItemResultTile(
-                    item: item,
-                    onTapAdjust: () => _showManualAdjustDialog(context, item),
+              if (_filteredAllocations.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AlokaColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Tidak ada kategori pada filter ini.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                )
+              else
+                ..._filteredAllocations.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _AllocationItemResultTile(
+                      item: item,
+                      onTapAdjust: () => _showManualAdjustDialog(context, item),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -451,16 +498,23 @@ class _CategoryFilterPill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? selectedColor : AlokaColors.surfaceSand,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+            ),
+          ),
         ),
       ),
     );
@@ -489,29 +543,31 @@ class _DualStatProgressCard extends StatelessWidget {
     final pctText = FormatService.formatPercentage(ratio);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: AlokaColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 19, color: AlokaColors.charcoal),
+            child: Icon(icon, size: 18, color: AlokaColors.charcoal),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -538,11 +594,11 @@ class _DualStatProgressCard extends StatelessWidget {
               Text('100%', style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           AlokaHorizontalProgressBar(
             ratio: ratio,
             activeColor: barColor,
-            height: 14,
+            height: 12,
           ),
         ],
       ),
@@ -569,10 +625,11 @@ class _AllocationDistributionCard extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AlokaColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,62 +648,13 @@ class _AllocationDistributionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Deretan ikon kategori beserta persentase porsi terhadap uang saku
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(activeItems.length, (idx) {
-                final item = activeItems[idx];
-                final share = (item.allocatedAmount / budget).clamp(0.0, 1.0);
-                final color = segmentPalette[idx % segmentPalette.length];
-
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.35),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          AlokaCategoryIcons.resolve(item.iconKey),
-                          size: 18,
-                          color: AlokaColors.charcoal,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.categoryName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AlokaColors.charcoal,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        FormatService.formatPercentage(share),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 10,
-                            ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Segmented Horizontal Bar Chart
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
-              height: 10,
+              height: 11,
               child: Row(
                 children: [
                   ...List.generate(activeItems.length, (idx) {
@@ -671,6 +679,60 @@ class _AllocationDistributionCard extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 14),
+
+          // Wrap chip porsi kategori agar seluruh kategori tampil utuh
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(activeItems.length, (idx) {
+              final item = activeItems[idx];
+              final share = (item.allocatedAmount / budget).clamp(0.0, 1.0);
+              final color = segmentPalette[idx % segmentPalette.length];
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: AlokaColors.background,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        AlokaCategoryIcons.resolve(item.iconKey),
+                        size: 13,
+                        color: AlokaColors.charcoal,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item.categoryName,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AlokaColors.charcoal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      FormatService.formatPercentage(share),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
         ],
       ),
@@ -700,30 +762,29 @@ class _AllocationItemResultTile extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: AlokaColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              // Kotak ikon Mustard Gold seperti pada kartu "My Savings" di referensi
               Container(
-                width: 48,
-                height: 48,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: item.isActive
                       ? AlokaColors.mustardGold.withValues(alpha: 0.45)
                       : AlokaColors.surfaceSand,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   AlokaCategoryIcons.resolve(item.iconKey),
                   color: AlokaColors.charcoal,
-                  size: 22,
+                  size: 21,
                 ),
               ),
               const SizedBox(width: 12),
@@ -731,22 +792,22 @@ class _AllocationItemResultTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Flexible(
-                          child: Text(
-                            item.categoryName,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                        Text(
+                          item.categoryName,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        const SizedBox(width: 6),
                         AlokaPillBadge(
                           text: item.status.label,
                           backgroundColor: badgeColor,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       FormatService.formatRupiah(item.allocatedAmount),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -756,35 +817,34 @@ class _AllocationItemResultTile extends StatelessWidget {
                   ],
                 ),
               ),
-              // Dua tombol ikon persegi membulat di sisi kanan sesuai referensi "My Savings"
               Container(
                 width: 38,
                 height: 38,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AlokaColors.background,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Text(
                   pct,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AlokaColors.charcoal,
                         fontWeight: FontWeight.w700,
-                        fontSize: 10,
+                        fontSize: 10.5,
                       ),
                 ),
               ),
-              const SizedBox(width: 6),
-              if (item.isActive && !item.isFixedCost)
+              if (item.isActive && !item.isFixedCost) ...[
+                const SizedBox(width: 6),
                 InkWell(
                   onTap: onTapAdjust,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                   child: Container(
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
                       color: AlokaColors.background,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(
                       Icons.tune_rounded,
@@ -793,19 +853,24 @@ class _AllocationItemResultTile extends StatelessWidget {
                     ),
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Min: ${FormatService.formatRupiah(item.minimumAmount)} • Target: ${FormatService.formatRupiah(item.targetAmount)}',
-                style: Theme.of(context).textTheme.bodySmall,
+              Expanded(
+                child: Text(
+                  'Min ${FormatService.formatRupiah(item.minimumAmount)} • Target ${FormatService.formatRupiah(item.targetAmount)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
+              const SizedBox(width: 8),
               if (item.isUserAdjusted)
                 const AlokaPillBadge(
-                  text: 'Penyesuaian Pengguna',
+                  text: 'Penyesuaian',
                   backgroundColor: AlokaColors.terracotta,
                   textColor: AlokaColors.surfaceWhite,
                 )

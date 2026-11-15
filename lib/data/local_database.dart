@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../models/budget_models.dart';
 import '../services/format_service.dart';
 
@@ -19,6 +21,16 @@ class LocalDatabase {
   }
 
   Future<Database> _initDatabase() async {
+    if (kIsWeb) {
+      return databaseFactoryFfiWeb.openDatabase(
+        'aloka_budget.db',
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _onCreate,
+        ),
+      );
+    }
+
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, 'aloka_budget.db');
 
@@ -255,7 +267,7 @@ class LocalDatabase {
         categoryType: CategoryType.optional,
         isActive: false,
         minimumAmount: 0,
-        targetAmount: 150000,
+        targetAmount: 200000,
         priority: PriorityLevel.low,
         priorityWeight: PriorityLevel.low.defaultWeight,
         isFixedCost: false,

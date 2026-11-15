@@ -62,17 +62,15 @@ class GeneticAlgorithmEngine {
 
     final random = seed != null ? Random(seed) : Random();
     final budget = plan.monthlyBudget;
-    final geneCount = categories.length;
 
-    // 2. Inisialisasi Populasi
+    // 2. Inisialisasi Populasi (acak layak tanpa melebihi target maupun B)
     List<_Individual> population = List.generate(
       config.populationSize,
-      (index) {
+      (_) {
         final genes = _initializeChromosome(
           budget: budget,
           categories: categories,
           random: random,
-          strategyIndex: index % 3,
         );
         return _evaluateChromosome(genes, categories);
       },
@@ -85,25 +83,27 @@ class GeneticAlgorithmEngine {
     int stagnantGenerations = 0;
     int generationsExecuted = 0;
 
-    // 3. Siklus Evolusi Generasi
+    final gen0Avg = population.fold<double>(
+          0.0,
+          (sum, ind) => sum + ind.fitness,
+        ) /
+        population.length;
+    convergenceLog?.add(
+      GenerationMetric(
+        generation: 0,
+        bestFitness: population.first.fitness,
+        averageFitness: gen0Avg,
+        bestRawWeightedSum: population.first.rawWeightedSum,
+      ),
+    );
+
+    // 3. Siklus Evolusi Generasi (Elitism -> Seleksi Turnamen -> Crossover Uniform -> Mutasi per Gen -> Repair)
     for (int gen = 1; gen <= config.maxGenerations; gen++) {
+      if (bestOverall.fitness >= 0.999999) {
+        break;
+      }
+
       generationsExecuted = gen;
-
-      // Catat metrik konvergensi per generasi
-      final avgFitness = population.fold<double>(
-            0.0,
-            (sum, ind) => sum + ind.fitness,
-          ) /
-          population.length;
-
-      convergenceLog?.add(
-        GenerationMetric(
-          generation: gen,
-          bestFitness: population.first.fitness,
-          averageFitness: avgFitness,
-          bestRawWeightedSum: population.first.rawWeightedSum,
-        ),
-      );
 
       // Buat generasi baru dengan Elitism
       final nextGeneration = <_Individual>[];
@@ -132,21 +132,21 @@ class GeneticAlgorithmEngine {
           random: random,
         );
 
-        // Mutation
-        if (random.nextDouble() <= config.mutationRate && geneCount > 0) {
-          childGenes = _mutateChromosome(
-            genes: childGenes,
-            budget: budget,
-            categories: categories,
-            random: random,
-          );
-          childGenes = _repairChromosome(
-            genes: childGenes,
-            budget: budget,
-            categories: categories,
-            random: random,
-          );
-        }
+        // Mutasi terarah per gen aktif dengan peluang P_m
+        childGenes = _mutateChromosome(
+          genes: childGenes,
+          budget: budget,
+          categories: categories,
+          random: random,
+        );
+
+        // Repair setelah mutasi untuk menjamin seluruh kendala terpenuhi
+        childGenes = _repairChromosome(
+          genes: childGenes,
+          budget: budget,
+          categories: categories,
+          random: random,
+        );
 
         final childInd = _evaluateChromosome(childGenes, categories);
         nextGeneration.add(childInd);
@@ -155,15 +155,33 @@ class GeneticAlgorithmEngine {
       nextGeneration.sort((a, b) => b.fitness.compareTo(a.fitness));
       population = nextGeneration;
 
-      // Periksa peningkatan solusi terbaik
-      if (population.first.fitness > bestOverall.fitness + 1e-9) {
+      // Periksa peningkatan solusi terbaik dengan ambang epsilon = 10^-6
+      if (population.first.fitness > bestOverall.fitness + 1e-6) {
         bestOverall = population.first;
         stagnantGenerations = 0;
       } else {
+        if (population.first.fitness > bestOverall.fitness) {
+          bestOverall = population.first;
+        }
         stagnantGenerations++;
       }
 
-      // Early stopping jika konvergen penuh (Z == 1.0) atau stagnan selama N generasi
+      final avgFitness = population.fold<double>(
+            0.0,
+            (sum, ind) => sum + ind.fitness,
+          ) /
+          population.length;
+
+      convergenceLog?.add(
+        GenerationMetric(
+          generation: gen,
+          bestFitness: bestOverall.fitness,
+          averageFitness: avgFitness,
+          bestRawWeightedSum: bestOverall.rawWeightedSum,
+        ),
+      );
+
+      // Early stopping jika target tercapai penuh (F == 1.0) atau stagnan selama N generasi
       if (bestOverall.fitness >= 0.999999 ||
           stagnantGenerations >= config.earlyStoppingGenerations) {
         break;
@@ -182,18 +200,18 @@ class GeneticAlgorithmEngine {
     );
   }
 
-  /// Inisialisasi satu kromosom yang memenuhi batas minimum, kategori nonaktif = 0,
-  /// dan menyebarkan sisa anggaran secara bervariasi tanpa melebihi target maupun B.
+  /// Inisialisasi satu kromosom secara acak layak:
+  /// 1. Kategori nonaktif = 0, kategori aktif dimulai dari minimumAmount (m_i).
+  /// 2. Sisa dana (B - sum(m_i)) dibagikan secara acak dalam kelipatan nominalStep (u)
+  ///    kepada kategori aktif yang diurutkan acak tanpa melebihi target (r_i) maupun B.
   List<int> _initializeChromosome({
     required int budget,
     required List<PlanCategoryInput> categories,
     required Random random,
-    required int strategyIndex,
   }) {
     final genes = List<int>.filled(categories.length, 0);
     int remainingBudget = budget;
 
-    // Penuhi seluruh minimum kategori aktif terlebih dahulu
     final expandableIndices = <int>[];
     for (int i = 0; i < categories.length; i++) {
       final cat = categories[i];
@@ -212,68 +230,27 @@ class GeneticAlgorithmEngine {
       return genes;
     }
 
-    // Variasi strategi penyebaran dana awal agar populasi beragam
-    if (strategyIndex == 0) {
-      // Strategi A: Distribusi acak berbobot prioritas
-      final weightedOrder = List<int>.from(expandableIndices)
-        ..sort((a, b) {
-          final cmp = categories[b]
-              .priorityWeight
-              .compareTo(categories[a].priorityWeight);
-          return cmp != 0 ? cmp : (random.nextBool() ? 1 : -1);
-        });
-      for (final idx in weightedOrder) {
-        if (remainingBudget <= 0) break;
-        final room = categories[idx].targetAmount - genes[idx];
-        if (room <= 0) continue;
-        final maxAlloc = min(room, remainingBudget);
-        final chosen = _randomSteppedAmount(maxAlloc, random, biasHigh: true);
-        genes[idx] += chosen;
-        remainingBudget -= chosen;
-      }
-    } else if (strategyIndex == 1) {
-      // Strategi B: Penyebaran acak merata per langkah
-      final activePool = List<int>.from(expandableIndices);
-      int safetyCounter = 0;
-      while (remainingBudget > 0 &&
-          activePool.isNotEmpty &&
-          safetyCounter < 500) {
-        safetyCounter++;
-        final pickIdx = activePool[random.nextInt(activePool.length)];
-        final room = categories[pickIdx].targetAmount - genes[pickIdx];
-        if (room <= 0) {
-          activePool.remove(pickIdx);
-          continue;
-        }
-        final delta = min(
-          min(room, remainingBudget),
-          _effectiveStep(room, remainingBudget) * (1 + random.nextInt(5)),
-        );
-        genes[pickIdx] += delta;
-        remainingBudget -= delta;
-        if (genes[pickIdx] >= categories[pickIdx].targetAmount) {
-          activePool.remove(pickIdx);
-        }
-      }
-    }
-
-    // Pastikan sisa anggaran yang masih bisa dialokasikan ke kategori di bawah target
-    // terdistribusi secara acak agar kandidat awal kompetitif
     final shuffled = List<int>.from(expandableIndices)..shuffle(random);
     for (final idx in shuffled) {
       if (remainingBudget <= 0) break;
       final room = categories[idx].targetAmount - genes[idx];
       if (room <= 0) continue;
-      final addAmount = min(room, remainingBudget);
-      genes[idx] += addAmount;
-      remainingBudget -= addAmount;
+      final maxAlloc = min(room, remainingBudget);
+      final chosen = _randomSteppedAmount(
+        maxAlloc,
+        random,
+        allowZero: true,
+        exactTargetRoom: room <= remainingBudget ? room : null,
+      );
+      genes[idx] += chosen;
+      remainingBudget -= chosen;
     }
 
     return genes;
   }
 
-  /// Menghitung tingkat pemenuhan target s_i dan nilai fitness Z.
-  /// Menggunakan skor rata-rata berbobot Z = sum(w_i * s_i) / sum(w_i).
+  /// Menghitung tingkat pemenuhan target s_i dan nilai fitness F.
+  /// Menggunakan skor rata-rata berbobot F = sum(w_i * s_i) / sum(w_i).
   _Individual _evaluateChromosome(
     List<int> genes,
     List<PlanCategoryInput> categories,
@@ -311,7 +288,7 @@ class GeneticAlgorithmEngine {
     );
   }
 
-  /// Tournament Selection
+  /// Tournament Selection berukuran k
   _Individual _tournamentSelection(
     List<_Individual> population,
     Random random,
@@ -327,7 +304,7 @@ class GeneticAlgorithmEngine {
     return best!;
   }
 
-  /// Uniform Crossover: mempertukarkan gen dari dua induk secara acak
+  /// Uniform Crossover: setiap gen anak diambil dari induk pertama atau kedua dengan peluang sama
   List<int> _uniformCrossover(
     List<int> parentA,
     List<int> parentB,
@@ -340,8 +317,9 @@ class GeneticAlgorithmEngine {
     return child;
   }
 
-  /// Mutation: memindahkan sebagian nominal dari kategori donor (di atas minimum)
-  /// ke kategori penerima (di bawah target) atau mengisi dari sisa anggaran.
+  /// Mutasi terarah per gen aktif dengan peluang P_m:
+  /// - Jika masih ada sisa dana U >= u (atau > 0), tambahkan sebagian ke penerima di bawah target.
+  /// - Jika tidak, pindahkan nominal dari kategori donor (di atas minimum) ke penerima (di bawah target).
   List<int> _mutateChromosome({
     required List<int> genes,
     required int budget,
@@ -349,54 +327,86 @@ class GeneticAlgorithmEngine {
     required Random random,
   }) {
     final mutated = List<int>.from(genes);
-    final currentTotal = mutated.fold<int>(0, (sum, val) => sum + val);
-    final unallocated = budget - currentTotal;
-
-    final receivers = <int>[];
-    final donors = <int>[];
+    final step = config.nominalStep;
 
     for (int i = 0; i < categories.length; i++) {
       final cat = categories[i];
-      if (!cat.isActive) continue;
-      if (mutated[i] < cat.targetAmount) {
-        receivers.add(i);
-      }
-      if (mutated[i] > cat.minimumAmount) {
-        donors.add(i);
-      }
-    }
+      if (!cat.isActive || cat.targetAmount <= cat.minimumAmount) continue;
+      if (random.nextDouble() > config.mutationRate) continue;
 
-    if (receivers.isEmpty) return mutated;
+      final currentTotal = mutated.fold<int>(0, (sum, val) => sum + val);
+      final unallocated = budget - currentTotal;
 
-    // Jika masih ada dana belum dialokasikan, tambahkan ke penerima
-    if (unallocated > 0 && random.nextBool()) {
-      final recIdx = receivers[random.nextInt(receivers.length)];
-      final room = categories[recIdx].targetAmount - mutated[recIdx];
-      final maxAdd = min(room, unallocated);
-      if (maxAdd > 0) {
-        final delta = _randomSteppedAmount(maxAdd, random, biasHigh: false);
-        mutated[recIdx] += delta;
-        return mutated;
+      final receivers = <int>[];
+      final donors = <int>[];
+      for (int j = 0; j < categories.length; j++) {
+        final c = categories[j];
+        if (!c.isActive) continue;
+        if (mutated[j] < c.targetAmount) receivers.add(j);
+        if (mutated[j] > c.minimumAmount) donors.add(j);
       }
-    }
 
-    // Pindahkan sebagian dana dari donor ke penerima
-    if (donors.isNotEmpty) {
-      final donorIdx = donors[random.nextInt(donors.length)];
-      final possibleReceivers =
-          receivers.where((idx) => idx != donorIdx).toList();
-      if (possibleReceivers.isNotEmpty) {
-        final recIdx =
-            possibleReceivers[random.nextInt(possibleReceivers.length)];
-        final donorSurplus =
-            mutated[donorIdx] - categories[donorIdx].minimumAmount;
-        final receiverRoom = categories[recIdx].targetAmount - mutated[recIdx];
-        final maxTransfer = min(donorSurplus, receiverRoom);
-        if (maxTransfer > 0) {
-          final transferAmount =
-              _randomSteppedAmount(maxTransfer, random, biasHigh: false);
-          mutated[donorIdx] -= transferAmount;
-          mutated[recIdx] += transferAmount;
+      if (receivers.isEmpty) break;
+
+      if (unallocated >= step || (unallocated > 0 && unallocated < step)) {
+        final recIdx = mutated[i] < cat.targetAmount
+            ? i
+            : receivers[random.nextInt(receivers.length)];
+        final room = categories[recIdx].targetAmount - mutated[recIdx];
+        final maxAdd = min(room, unallocated);
+        if (maxAdd > 0) {
+          final delta = _randomSteppedAmount(
+            maxAdd,
+            random,
+            allowZero: false,
+            exactTargetRoom: room <= unallocated ? room : null,
+          );
+          mutated[recIdx] += delta;
+          continue;
+        }
+      }
+
+      if (donors.isNotEmpty) {
+        int? donorIdx;
+        int? recIdx;
+
+        if (mutated[i] < cat.targetAmount) {
+          final otherDonors = donors.where((d) => d != i).toList();
+          if (otherDonors.isNotEmpty) {
+            donorIdx = otherDonors[random.nextInt(otherDonors.length)];
+            recIdx = i;
+          }
+        }
+        if (donorIdx == null && mutated[i] > cat.minimumAmount) {
+          final otherReceivers = receivers.where((r) => r != i).toList();
+          if (otherReceivers.isNotEmpty) {
+            donorIdx = i;
+            recIdx = otherReceivers[random.nextInt(otherReceivers.length)];
+          }
+        }
+        if (donorIdx == null) {
+          donorIdx = donors[random.nextInt(donors.length)];
+          final otherReceivers = receivers.where((r) => r != donorIdx).toList();
+          if (otherReceivers.isNotEmpty) {
+            recIdx = otherReceivers[random.nextInt(otherReceivers.length)];
+          }
+        }
+
+        if (recIdx != null) {
+          final donorSurplus =
+              mutated[donorIdx] - categories[donorIdx].minimumAmount;
+          final receiverRoom = categories[recIdx].targetAmount - mutated[recIdx];
+          final maxTransfer = min(donorSurplus, receiverRoom);
+          if (maxTransfer > 0) {
+            final transferAmount = _randomSteppedAmount(
+              maxTransfer,
+              random,
+              allowZero: false,
+              exactTargetRoom: receiverRoom <= donorSurplus ? receiverRoom : null,
+            );
+            mutated[donorIdx] -= transferAmount;
+            mutated[recIdx] += transferAmount;
+          }
         }
       }
     }
@@ -404,11 +414,10 @@ class GeneticAlgorithmEngine {
     return mutated;
   }
 
-  /// Repair kromosom agar selalu mematuhi seluruh constraint:
+  /// Repair kromosom agar selalu mematuhi seluruh kendala:
   /// 1. Kategori nonaktif = 0
   /// 2. m_i <= x_i <= r_i untuk setiap kategori aktif
   /// 3. Jika sum(x_i) > B, kurangi alokasi di atas minimum mulai dari prioritas terendah
-  /// 4. Jika sum(x_i) < B dan masih ada kategori aktif di bawah target, salurkan sisa dana
   List<int> _repairChromosome({
     required List<int> genes,
     required int budget,
@@ -427,13 +436,12 @@ class GeneticAlgorithmEngine {
       }
     }
 
-    int totalAllocated = repaired.fold<int>(0, (sum, val) => sum + val);
+    final totalAllocated = repaired.fold<int>(0, (sum, val) => sum + val);
 
     // Langkah 3: Jika melebihi anggaran B, kurangi dari kategori berprioritas paling rendah
     if (totalAllocated > budget) {
       int excess = totalAllocated - budget;
 
-      // Urutkan indeks kategori aktif dari bobot prioritas terendah ke tertinggi
       final activeIndices = <int>[];
       for (int i = 0; i < categories.length; i++) {
         if (categories[i].isActive &&
@@ -455,67 +463,44 @@ class GeneticAlgorithmEngine {
         repaired[idx] -= cut;
         excess -= cut;
       }
-    } else if (totalAllocated < budget) {
-      // Langkah 4: Jika masih ada sisa anggaran dan ada kategori aktif yang belum mencapai target,
-      // salurkan sisa anggaran agar tidak membiarkan dana menganggur saat target belum tercapai.
-      int remaining = budget - totalAllocated;
-      final needyIndices = <int>[];
-      for (int i = 0; i < categories.length; i++) {
-        if (categories[i].isActive &&
-            repaired[i] < categories[i].targetAmount) {
-          needyIndices.add(i);
-        }
-      }
-
-      if (needyIndices.isNotEmpty) {
-        needyIndices.shuffle(random);
-        // Gunakan probabilitas agar sebagian kromosom mengutamakan prioritas tinggi
-        // dan sebagian tetap mengeksplorasi kombinasi acak
-        if (random.nextDouble() < 0.7) {
-          needyIndices.sort(
-            (a, b) => categories[b]
-                .priorityWeight
-                .compareTo(categories[a].priorityWeight),
-          );
-        }
-        for (final idx in needyIndices) {
-          if (remaining <= 0) break;
-          final room = categories[idx].targetAmount - repaired[idx];
-          if (room <= 0) continue;
-          final add = min(room, remaining);
-          repaired[idx] += add;
-          remaining -= add;
-        }
-      }
     }
 
     return repaired;
   }
 
-  /// Menentukan ukuran langkah efektif tanpa membulatkan input pengguna secara diam-diam.
-  int _effectiveStep(int room, int remainingBudget) {
-    final step = config.nominalStep;
-    if (step <= 1) return 1;
-    if (room % step == 0 && remainingBudget % step == 0) {
-      return step;
-    }
-    return 1;
-  }
-
-  /// Mengambil nominal acak dalam batas [1, maxAmount] menggunakan kelipatan nominalStep
-  /// (dengan fallback eksak apabila maxAmount bukan kelipatan nominalStep).
-  int _randomSteppedAmount(int maxAmount, Random random, {required bool biasHigh}) {
+  /// Mengambil nominal acak dalam batas [0 atau 1, maxAmount] mengikuti kelipatan nominalStep (u).
+  int _randomSteppedAmount(
+    int maxAmount,
+    Random random, {
+    required bool allowZero,
+    int? exactTargetRoom,
+  }) {
     if (maxAmount <= 0) return 0;
     final step = config.nominalStep;
-    if (maxAmount <= step || maxAmount % step != 0) {
-      return biasHigh ? maxAmount : (1 + random.nextInt(maxAmount));
+    if (step <= 1 || maxAmount < step) {
+      return allowZero ? random.nextInt(maxAmount + 1) : (1 + random.nextInt(maxAmount));
     }
+
     final totalSteps = maxAmount ~/ step;
-    if (totalSteps <= 1) return maxAmount;
-    final chosenSteps = biasHigh
-        ? ((totalSteps + 1) ~/ 2) + random.nextInt(totalSteps - ((totalSteps + 1) ~/ 2) + 1)
-        : 1 + random.nextInt(totalSteps);
-    return (chosenSteps * step).clamp(step, maxAmount);
+    final hasExactRemainder =
+        exactTargetRoom != null && exactTargetRoom == maxAmount && maxAmount % step != 0;
+
+    if (allowZero) {
+      final maxChoice = totalSteps + (hasExactRemainder ? 1 : 0);
+      final picked = random.nextInt(maxChoice + 1);
+      if (hasExactRemainder && picked == maxChoice) {
+        return maxAmount;
+      }
+      return picked * step;
+    }
+
+    if (totalSteps <= 0) return maxAmount;
+    final maxChoice = totalSteps + (hasExactRemainder ? 1 : 0);
+    final picked = 1 + random.nextInt(maxChoice);
+    if (hasExactRemainder && picked == maxChoice) {
+      return maxAmount;
+    }
+    return (picked * step).clamp(1, maxAmount);
   }
 
   OptimizationResult _buildOptimizationResult({

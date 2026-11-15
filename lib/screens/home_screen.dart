@@ -27,112 +27,85 @@ class HomeScreen extends StatelessWidget {
     final feasibility = controller.feasibilityReport;
 
     final totalAllocated = latest?.totalAllocated ?? feasibility.minTotal;
-    final unallocated = latest?.unallocatedAmount ?? (budget - feasibility.minTotal).clamp(0, budget);
+    final unallocated =
+        latest?.unallocatedAmount ?? (budget - feasibility.minTotal).clamp(0, budget);
     final savingsTarget = controller.currentSavingsTarget;
     final savingsAllocated = latest?.savingsAllocatedAmount ?? 0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 110),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 118),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Atas dengan "Halo, [username]" di pojok kanan atas
+          // 1. Header Atas dengan "Halo, [username]"
           AlokaTopBar(
             username: controller.userProfile.username,
             fullname: controller.userProfile.fullname,
             onMenuTap: () => controller.setSelectedNavIndex(1),
             onProfileTap: () => controller.setSelectedNavIndex(3),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 2. Deretan Pill-Shaped Summary Chips (seperti kapsul mata uang di atas kartu kuning)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // 2. Tiga Pill Summary Sejajar Penuh (tanpa terpotong di tepi kanan)
+          IntrinsicHeight(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _SummaryPillChip(
-                  isDark: true,
-                  icon: Icons.verified_user_outlined,
-                  iconBg: AlokaColors.terracotta,
-                  title: 'Wajib Min.',
-                  value: FormatService.formatRupiah(feasibility.mandatoryMinTotal),
+                Expanded(
+                  child: _SummaryPillChip(
+                    isDark: true,
+                    icon: Icons.verified_user_outlined,
+                    iconBg: AlokaColors.terracotta,
+                    title: 'Wajib Min.',
+                    value: FormatService.formatRupiah(feasibility.mandatoryMinTotal),
+                  ),
                 ),
-                const SizedBox(width: 10),
-                _SummaryPillChip(
-                  isDark: false,
-                  icon: Icons.savings_outlined,
-                  iconBg: AlokaColors.mustardGold,
-                  title: 'Target Tabungan',
-                  value: FormatService.formatRupiah(savingsTarget),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SummaryPillChip(
+                    isDark: false,
+                    icon: Icons.savings_outlined,
+                    iconBg: AlokaColors.mustardGold,
+                    title: 'Tabungan',
+                    value: FormatService.formatRupiah(savingsTarget),
+                  ),
                 ),
-                const SizedBox(width: 10),
-                _SummaryPillChip(
-                  isDark: false,
-                  icon: Icons.tune_rounded,
-                  iconBg: AlokaColors.pastelLime,
-                  title: 'Opsional Aktif',
-                  value: '${controller.activeOptionalCount} Kategori',
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SummaryPillChip(
+                    isDark: false,
+                    icon: Icons.tune_rounded,
+                    iconBg: AlokaColors.pastelLime,
+                    title: 'Opsional',
+                    value: '${controller.activeOptionalCount} Aktif',
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // 3. Kartu Utama Uang Saku Bulanan (#EBB85E Mustard Gold)
           _MustardHeroBalanceCard(
-            planName: plan?.name ?? 'Rencana Bulanan',
+            planName: plan?.name ?? 'Anggaran Bulanan',
             monthlyBudget: budget,
             totalAllocated: totalAllocated,
             unallocatedAmount: unallocated,
             hasResult: latest != null,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Indikator garis halaman tipis di bawah kartu utama sesuai gambar referensi
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 28,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AlokaColors.charcoal,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 14,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AlokaColors.borderSubtle,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 14,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AlokaColors.borderSubtle,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-
-          // 4. Deretan 4 Tombol Aksi Persegi Membulat (Quick Actions)
+          // 4. Deretan 4 Tombol Aksi Cepat (label ringkas tanpa terpotong)
           Row(
             children: [
               AlokaQuickActionButton(
                 icon: Icons.auto_awesome_outlined,
-                label: 'Optimasi GA',
+                label: 'Optimasi',
                 onTap: onStartOptimization,
               ),
               AlokaQuickActionButton(
                 icon: Icons.edit_note_rounded,
-                label: 'Atur Anggaran',
+                label: 'Anggaran',
                 onTap: () => controller.setSelectedNavIndex(1),
               ),
               AlokaQuickActionButton(
@@ -147,9 +120,9 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
 
-          // 5. Seksi Status Alokasi ("Status Alokasi" + "Lihat Semua")
+          // 5. Seksi Status Alokasi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -169,9 +142,9 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // 6. Kartu Status Pastel Lime Green (#BCE47A) mengacu pada kartu "Wallet status" di lingkaran merah
+          // 6. Kartu Status Pastel Lime Green (#BCE47A)
           _LimeAllocationStatusCard(
             latestResult: latest,
             feasibility: feasibility,
@@ -179,9 +152,9 @@ class HomeScreen extends StatelessWidget {
             savingsTarget: savingsTarget,
             onTapOptimize: onStartOptimization,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 7. Ringkasan Kebutuhan Wajib & Hasil Optimasi Terakhir
+          // 7. Ringkasan Kebutuhan Wajib
           _MandatorySummarySection(
             mandatoryInputs: controller.mandatoryInputs,
             latestResult: latest,
@@ -213,51 +186,60 @@ class _SummaryPillChip extends StatelessWidget {
     final bgColor = isDark ? AlokaColors.charcoal : AlokaColors.surfaceWhite;
     final textColor = isDark ? AlokaColors.surfaceWhite : AlokaColors.charcoal;
     final subColor = isDark
-        ? AlokaColors.surfaceWhite.withValues(alpha: 0.7)
+        ? AlokaColors.surfaceWhite.withValues(alpha: 0.72)
         : AlokaColors.textMuted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
               color: iconBg,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              size: 15,
+              size: 14,
               color: AlokaColors.charcoal,
             ),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: subColor,
-                      fontSize: 10,
-                    ),
-              ),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: textColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-            ],
+          const SizedBox(width: 7),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: subColor,
+                        fontSize: 10,
+                      ),
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: textColor,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -284,102 +266,114 @@ class _MustardHeroBalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AlokaColors.mustardGold,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(26),
       ),
       child: Stack(
         children: [
-          // Ornamen geometris vektor datar bergaya retro-modern di kanan bawah
           Positioned(
             right: -6,
             bottom: -10,
             child: Icon(
               Icons.auto_graph_rounded,
-              size: 110,
-              color: AlokaColors.terracotta.withValues(alpha: 0.22),
+              size: 104,
+              color: AlokaColors.terracotta.withValues(alpha: 0.2),
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: const BoxDecoration(
-                          color: AlokaColors.surfaceWhite,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_wallet_outlined,
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: AlokaColors.surfaceWhite,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 14,
+                      color: AlokaColors.charcoal,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Uang Saku · $planName',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AlokaColors.charcoal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  FormatService.formatRupiah(monthlyBudget),
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AlokaColors.surfaceWhite.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_outline_rounded,
                           size: 14,
                           color: AlokaColors.charcoal,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Uang Saku Bulanan ($planName)',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AlokaColors.charcoal,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const Icon(
-                    Icons.ac_unit_rounded,
-                    color: AlokaColors.charcoal,
-                    size: 28,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                FormatService.formatRupiah(monthlyBudget),
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 15,
-                    color: AlokaColors.charcoal,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    hasResult
-                        ? 'Dialokasikan: ${FormatService.formatRupiah(totalAllocated)}'
-                        : 'Total Minimum Wajib: ${FormatService.formatRupiah(totalAllocated)}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                        const SizedBox(width: 5),
+                        Text(
+                          hasResult
+                              ? 'Dialokasikan: ${FormatService.formatRupiah(totalAllocated)}'
+                              : 'Min. Wajib: ${FormatService.formatRupiah(totalAllocated)}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AlokaColors.charcoal,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AlokaColors.charcoal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Sisa: ${FormatService.formatRupiah(unallocatedAmount)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AlokaColors.charcoal,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AlokaColors.surfaceWhite.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  'Sisa Dana: ${FormatService.formatRupiah(unallocatedAmount)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AlokaColors.charcoal,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
               ),
             ],
           ),
@@ -413,39 +407,43 @@ class _LimeAllocationStatusCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AlokaColors.pastelLime.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AlokaColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  hasResult
-                      ? 'Tabungan: ${FormatService.formatRupiah(savingsAllocated)} / ${FormatService.formatRupiah(savingsTarget)}'
-                      : 'Target Tabungan: ${FormatService.formatRupiah(savingsTarget)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AlokaColors.charcoal,
-                        fontWeight: FontWeight.w700,
-                      ),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AlokaColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    hasResult
+                        ? 'Tabungan: ${FormatService.formatRupiah(savingsAllocated)} / ${FormatService.formatRupiah(savingsTarget)}'
+                        : 'Target Tabungan: ${FormatService.formatRupiah(savingsTarget)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AlokaColors.charcoal,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: onTapOptimize,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
-                  width: 38,
-                  height: 38,
+                  width: 36,
+                  height: 36,
                   decoration: const BoxDecoration(
                     color: AlokaColors.surfaceWhite,
                     shape: BoxShape.circle,
@@ -459,9 +457,8 @@ class _LimeAllocationStatusCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
@@ -476,11 +473,11 @@ class _LimeAllocationStatusCard extends StatelessWidget {
                             fontSize: 24,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       hasResult
-                          ? 'Skor Pemenuhan Target: $fitnessPct • ${latestResult!.achievedAllocations.length}/${latestResult!.activeAllocations.length} Tercapai'
-                          : 'Belum dioptimasi • Tekan tombol panah untuk mulai GA',
+                          ? 'Skor $fitnessPct • ${latestResult!.achievedAllocations.length}/${latestResult!.activeAllocations.length} target tercapai'
+                          : 'Belum dioptimasi • Ketuk panah untuk mulai',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AlokaColors.charcoal,
                             fontWeight: FontWeight.w600,
@@ -490,7 +487,6 @@ class _LimeAllocationStatusCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Lencana kapsul bertumpuk bergaya referensi ("€ $ CS") -> ("W O T")
               const Row(
                 children: [
                   _MiniBadgePill(
@@ -534,10 +530,10 @@ class _MiniBadgePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
@@ -581,11 +577,16 @@ class _MandatorySummarySection extends StatelessWidget {
               ),
               TextButton(
                 onPressed: onEditBudget,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: const Text('Ubah Nominal'),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           ...mandatoryInputs.map((item) {
             final allocatedItem = latestResult?.allocationSnapshot
                 .where((a) => a.categoryId == item.categoryId)
@@ -596,44 +597,46 @@ class _MandatorySummarySection extends StatelessWidget {
                 : 1.0;
 
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 7),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: AlokaColors.dustyBlush.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              AlokaCategoryIcons.resolve(item.iconKey),
-                              size: 18,
-                              color: AlokaColors.charcoal,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.categoryName,
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                              Text(
-                                'Min: ${FormatService.formatRupiah(item.minimumAmount)} • Target: ${FormatService.formatRupiah(item.targetAmount)}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ],
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: AlokaColors.dustyBlush.withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          AlokaCategoryIcons.resolve(item.iconKey),
+                          size: 18,
+                          color: AlokaColors.charcoal,
+                        ),
                       ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.categoryName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            Text(
+                              'Min ${FormatService.formatRupiah(item.minimumAmount)} • Target ${FormatService.formatRupiah(item.targetAmount)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
                         FormatService.formatRupiah(currentVal),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -642,7 +645,7 @@ class _MandatorySummarySection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 7),
                   AlokaHorizontalProgressBar(
                     ratio: ratio,
                     height: 8,

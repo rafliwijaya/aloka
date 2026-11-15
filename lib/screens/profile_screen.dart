@@ -65,9 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AlokaColors.surfaceWhite,
-        title: const Text('Hapus Seluruh Riwayat?'),
+        title: const Text('Hapus Semua Riwayat?'),
         content: const Text(
-          'Semua riwayat hasil optimasi yang tersimpan di perangkat ini akan dihapus permanen. Rencana anggaran aktif saat ini tidak akan terhapus.',
+          'Semua riwayat optimasi akan dihapus permanen. Rencana aktif tetap aman.',
         ),
         actions: [
           TextButton(
@@ -90,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Seluruh riwayat optimasi telah dihapus.'),
+            content: Text('Semua riwayat dihapus.'),
           ),
         );
       }
@@ -104,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 120),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -114,12 +114,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
 
-          // 1. Kartu Profil Pengguna (Fullname & Username)
+          // 1. Kartu Profil Pengguna
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AlokaColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,46 +127,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Row(
                   children: [
                     Container(
-                      width: 56,
-                      height: 56,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         color: AlokaColors.mustardGold,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: const Icon(
                         Icons.person_outline_rounded,
-                        size: 30,
+                        size: 28,
                         color: AlokaColors.charcoal,
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.controller.userProfile.fullname,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Halo, ${widget.controller.userProfile.username}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     const AlokaPillBadge(
-                      text: 'Lokal Offline',
+                      text: 'Offline',
                       backgroundColor: AlokaColors.pastelLime,
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _fullnameCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Nama Lengkap (Fullname)',
+                    labelText: 'Nama Lengkap',
                     hintText: 'Default: Pengguna',
                   ),
                 ),
@@ -174,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 TextField(
                   controller: _usernameCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Username (Ditampilkan pada Beranda)',
+                    labelText: 'Username',
                     hintText: 'Default: user',
                   ),
                 ),
@@ -184,31 +189,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _saveProfile(context),
                     icon: const Icon(Icons.save_outlined, size: 18),
-                    label: const Text('Simpan Profil Pengguna'),
+                    label: const Text('Simpan Profil'),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 2. Manajemen Kategori Kustom & Arsip (Bagian 4.C)
+          // 2. Manajemen Kategori Kustom
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AlokaColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Manajemen Kategori Kustom',
+                  'Kategori Kustom',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
-                  'Kategori kustom yang diarsipkan tidak akan muncul pada rencana baru, namun riwayat optimasi lama tetap terjaga utuh.',
+                  'Kategori terarsip tetap tersimpan pada riwayat lama.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
@@ -218,10 +223,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: AlokaColors.surfaceSand,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
-                      'Belum ada kategori kustom. Anda dapat menambahkannya melalui halaman Anggaran.',
+                      'Belum ada kategori kustom.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AlokaColors.charcoal,
                           ),
@@ -238,37 +243,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: AlokaColors.background,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(15),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  AlokaCategoryIcons.resolve(cat.iconKey),
-                                  size: 18,
-                                  color: AlokaColors.charcoal,
-                                ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      cat.name,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    ),
-                                    Text(
-                                      '${cat.type.label} • ${cat.isArchived ? "Diarsipkan" : "Aktif"}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            Icon(
+                              AlokaCategoryIcons.resolve(cat.iconKey),
+                              size: 18,
+                              color: AlokaColors.charcoal,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cat.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.titleSmall,
+                                  ),
+                                  Text(
+                                    '${cat.type.label} • ${cat.isArchived ? "Arsip" : "Aktif"}',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
                             ),
                             TextButton(
                               onPressed: () {
@@ -289,14 +289,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 3. Privasi & Penyimpanan Lokal
+          // 3. Data & Privasi Lokal
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AlokaColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,9 +305,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   'Data & Privasi Lokal',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
-                  'Seluruh data uang saku, kategori, dan riwayat optimasi disimpan 100% secara lokal di perangkat Anda (SQLite) tanpa dikirim ke server eksternal.',
+                  'Seluruh rencana anggaran dan riwayat tersimpan lokal di perangkat.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 14),
@@ -321,13 +321,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Icons.delete_sweep_outlined,
                       color: AlokaColors.terracotta,
                     ),
-                    label: const Text('Bersihkan Semua Riwayat Optimasi'),
+                    label: const Text('Hapus Semua Riwayat'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AlokaColors.terracotta,
                       side: const BorderSide(color: AlokaColors.terracotta),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
@@ -335,14 +335,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 4. Tentang Aloka & Metode Algoritma Genetika
+          // 4. Tentang Aloka (Ringkas 2 kalimat)
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: AlokaColors.surfaceSand,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AlokaColors.mustardGold,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(11),
                       ),
                       child: const Icon(
                         Icons.auto_awesome_outlined,
@@ -364,26 +364,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Tentang Aloka & Algoritma Genetika',
+                        'Tentang Aloka',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Aloka adalah aplikasi mobile perencanaan alokasi uang saku bulanan mahasiswa. '
-                  'Aloka menggunakan Algoritma Genetika (Genetic Algorithm) untuk mencari kombinasi pembagian anggaran yang memenuhi seluruh batas minimum kebutuhan wajib serta memaksimalkan pencapaian target alokasi dan tabungan berdasarkan bobot prioritas pengguna.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AlokaColors.charcoal,
-                      ),
-                ),
                 const SizedBox(height: 10),
                 Text(
-                  'Judul Penelitian:\n“Pengembangan Aplikasi Mobile untuk Optimasi Alokasi Uang Saku Mahasiswa Menggunakan Algoritma Genetika Berdasarkan Prioritas Kebutuhan dan Target Tabungan.”',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  'Aloka membantu merencanakan pembagian uang saku bulanan secara luring. Algoritma Genetika memprioritaskan kebutuhan wajib serta menimbang target tabungan sesuai bobot pilihan Anda.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AlokaColors.charcoal,
-                        fontWeight: FontWeight.w600,
                       ),
                 ),
               ],

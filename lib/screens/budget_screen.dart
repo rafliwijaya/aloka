@@ -149,10 +149,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Atur ${input.categoryName}',
-                        style: Theme.of(ctx).textTheme.titleLarge,
+                      Expanded(
+                        child: Text(
+                          'Atur ${input.categoryName}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(ctx).textTheme.titleLarge,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       AlokaPillBadge(
                         text: input.categoryType.label,
                         backgroundColor: input.categoryType == CategoryType.mandatory
@@ -161,20 +166,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Minimum adalah batas bawah yang wajib dipenuhi, sedangkan Target adalah nominal ideal yang ingin dicapai.',
-                    style: Theme.of(ctx).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      'Biaya Tetap (Minimum = Target)',
+                      'Biaya Tetap (Min = Target)',
                       style: Theme.of(ctx).textTheme.titleSmall,
                     ),
                     subtitle: Text(
-                      'Aktifkan untuk pengeluaran bernominal pasti seperti paket internet.',
+                      'Nominal pasti seperti paket internet.',
                       style: Theme.of(ctx).textTheme.bodySmall,
                     ),
                     value: isFixedCost,
@@ -356,7 +356,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       children: [
                         Expanded(
                           child: ChoiceChip(
-                            label: const Text('Wajib (Selalu Aktif)'),
+                            label: const Text('Wajib'),
                             selected: selectedType == CategoryType.mandatory,
                             selectedColor: AlokaColors.mustardGold,
                             onSelected: (_) {
@@ -367,7 +367,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ChoiceChip(
-                            label: const Text('Opsional (Toggle)'),
+                            label: const Text('Opsional'),
                             selected: selectedType == CategoryType.optional,
                             selectedColor: AlokaColors.mustardGold,
                             onSelected: (_) {
@@ -511,27 +511,34 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 120),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Halaman Anggaran
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Rencana & Kategori',
-                style: Theme.of(context).textTheme.headlineMedium,
+              Expanded(
+                child: Text(
+                  'Rencana & Kategori',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
               ),
+              const SizedBox(width: 8),
               OutlinedButton.icon(
                 onPressed: () => _showAddCustomCategorySheet(context),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Kategori Kustom'),
+                icon: const Icon(Icons.add_rounded, size: 17),
+                label: const Text('Kustom'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AlokaColors.charcoal,
                   side: const BorderSide(color: AlokaColors.charcoal),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
@@ -539,49 +546,52 @@ class _BudgetScreenState extends State<BudgetScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Kartu Uang Saku & Ringkasan Validasi Kelayakan (MIN_TOTAL <= B)
+          // Kartu Uang Saku & Ringkasan Kelayakan
           _FeasibilitySummaryCard(
             planName: plan?.name ?? 'Anggaran Bulanan',
             monthlyBudget: plan?.monthlyBudget ?? 0,
             feasibility: feasibility,
             onEditBudget: () => _showEditBudgetDialog(context),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // Pill-Shaped Tabs untuk filter Kategori (Semua / Kebutuhan Wajib / Opsional)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _FilterPillTab(
+          // 3 Tab Filter Sejajar Penuh tanpa terpotong
+          Row(
+            children: [
+              Expanded(
+                child: _FilterPillTab(
                   label: 'Semua (${widget.controller.categoryInputs.length})',
                   isSelected: _selectedFilterTab == 0,
                   activeColor: AlokaColors.mustardGold,
                   onTap: () => setState(() => _selectedFilterTab = 0),
                 ),
-                const SizedBox(width: 8),
-                _FilterPillTab(
-                  label: 'Kebutuhan Wajib (${widget.controller.mandatoryInputs.length})',
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _FilterPillTab(
+                  label: 'Wajib (${widget.controller.mandatoryInputs.length})',
                   isSelected: _selectedFilterTab == 1,
                   activeColor: AlokaColors.pastelLime,
                   onTap: () => setState(() => _selectedFilterTab = 1),
                 ),
-                const SizedBox(width: 8),
-                _FilterPillTab(
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _FilterPillTab(
                   label: 'Opsional (${widget.controller.optionalInputs.length})',
                   isSelected: _selectedFilterTab == 2,
                   activeColor: AlokaColors.dustyBlush,
                   onTap: () => setState(() => _selectedFilterTab = 2),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
 
           // Daftar Kartu Kategori
           ...displayedCategories.map(
             (input) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 10),
               child: _CategoryConfigTile(
                 input: input,
                 onTapEdit: () => _showEditCategorySheet(context, input),
@@ -590,9 +600,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // Tombol Utama: Optimalkan Alokasi dengan Genetic Algorithm
+          // Tombol Utama Optimasi GA
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -613,9 +623,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AlokaColors.charcoal,
                 disabledBackgroundColor: AlokaColors.borderSubtle,
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                padding: const EdgeInsets.symmetric(vertical: 17),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
               icon: widget.controller.isOptimizing
@@ -630,8 +640,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   : const Icon(Icons.auto_awesome_rounded, color: AlokaColors.mustardGold),
               label: Text(
                 widget.controller.isOptimizing
-                    ? 'Mencari Kombinasi Alokasi Terbaik...'
-                    : 'Optimalkan Alokasi (Algoritma Genetika)',
+                    ? 'Mengoptimalkan Alokasi...'
+                    : 'Optimalkan Alokasi',
               ),
             ),
           ),
@@ -641,7 +651,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 }
 
-class _FeasibilitySummaryCard extends StatelessWidget {
+class _FeasibilitySummaryCard extends StatefulWidget {
   final String planName;
   final int monthlyBudget;
   final FeasibilityReport feasibility;
@@ -655,98 +665,161 @@ class _FeasibilitySummaryCard extends StatelessWidget {
   });
 
   @override
+  State<_FeasibilitySummaryCard> createState() => _FeasibilitySummaryCardState();
+}
+
+class _FeasibilitySummaryCardState extends State<_FeasibilitySummaryCard> {
+  bool _showDetail = false;
+
+  String get _compactStatus {
+    final f = widget.feasibility;
+    if (f.isFeasible) {
+      final remaining = widget.monthlyBudget - f.minTotal;
+      return 'Layak · Sisa target ${FormatService.formatRupiah(remaining)}';
+    }
+    if (f.shortfall > 0) {
+      return 'Kurang ${FormatService.formatRupiah(f.shortfall)} dari minimum';
+    }
+    return 'Konfigurasi anggaran belum valid';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isFeasible = feasibility.isFeasible;
+    final isFeasible = widget.feasibility.isFeasible;
     final bannerColor = isFeasible
         ? AlokaColors.pastelLime.withValues(alpha: 0.45)
         : AlokaColors.terracotta.withValues(alpha: 0.16);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AlokaColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    planName,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    FormatService.formatRupiah(monthlyBudget),
-                    style: Theme.of(context).textTheme.displayMedium,
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: onEditBudget,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Ubah Uang Saku'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AlokaColors.mustardGold,
-                  foregroundColor: AlokaColors.charcoal,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
             children: [
               Expanded(
-                child: _MiniMetricBox(
-                  label: 'Total Minimum (Wajib+Aktif)',
-                  value: FormatService.formatRupiah(feasibility.minTotal),
-                  bgColor: AlokaColors.surfaceSand,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.planName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 3),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        FormatService.formatRupiah(widget.monthlyBudget),
+                        style: Theme.of(context).textTheme.displayMedium,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                child: _MiniMetricBox(
-                  label: 'Total Target Aktif',
-                  value: FormatService.formatRupiah(feasibility.targetTotal),
-                  bgColor: AlokaColors.dustyBlush.withValues(alpha: 0.55),
+              ElevatedButton.icon(
+                onPressed: widget.onEditBudget,
+                icon: const Icon(Icons.edit_outlined, size: 15),
+                label: const Text('Ubah Saldo'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AlokaColors.mustardGold,
+                  foregroundColor: AlokaColors.charcoal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: bannerColor,
-              borderRadius: BorderRadius.circular(16),
-            ),
+          IntrinsicHeight(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  isFeasible
-                      ? Icons.check_circle_outline_rounded
-                      : Icons.warning_amber_rounded,
-                  color: isFeasible ? AlokaColors.charcoal : AlokaColors.terracotta,
-                  size: 20,
+                Expanded(
+                  child: _MiniMetricBox(
+                    label: 'Minimum Aktif',
+                    value: FormatService.formatRupiah(widget.feasibility.minTotal),
+                    bgColor: AlokaColors.surfaceSand,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    feasibility.summaryMessage,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AlokaColors.charcoal,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: _MiniMetricBox(
+                    label: 'Target Aktif',
+                    value: FormatService.formatRupiah(widget.feasibility.targetTotal),
+                    bgColor: AlokaColors.dustyBlush.withValues(alpha: 0.55),
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => setState(() => _showDetail = !_showDetail),
+            borderRadius: BorderRadius.circular(14),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: bannerColor,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isFeasible
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.warning_amber_rounded,
+                        color: isFeasible
+                            ? AlokaColors.charcoal
+                            : AlokaColors.terracotta,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _compactStatus,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AlokaColors.charcoal,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                      Icon(
+                        _showDetail
+                            ? Icons.keyboard_arrow_up_rounded
+                            : Icons.keyboard_arrow_down_rounded,
+                        size: 18,
+                        color: AlokaColors.charcoal,
+                      ),
+                    ],
+                  ),
+                  if (_showDetail) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.feasibility.summaryMessage,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AlokaColors.charcoal,
+                          ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ],
@@ -769,24 +842,31 @@ class _MiniMetricBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+          const SizedBox(height: 3),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
           ),
         ],
       ),
@@ -813,16 +893,23 @@ class _FilterPillTab extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? activeColor : AlokaColors.surfaceSand,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+            ),
+          ),
         ),
       ),
     );
@@ -847,103 +934,106 @@ class _CategoryConfigTile extends StatelessWidget {
 
     return Opacity(
       opacity: isActive ? 1.0 : 0.6,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AlokaColors.surfaceWhite,
+      child: Material(
+        color: AlokaColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: onTapEdit,
           borderRadius: BorderRadius.circular(22),
-        ),
-        child: Column(
-          children: [
-            Row(
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isMandatory
-                        ? AlokaColors.mustardGold.withValues(alpha: 0.35)
-                        : AlokaColors.dustyBlush.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    AlokaCategoryIcons.resolve(input.iconKey),
-                    color: AlokaColors.charcoal,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: isMandatory
+                            ? AlokaColors.mustardGold.withValues(alpha: 0.35)
+                            : AlokaColors.dustyBlush.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: Icon(
+                        AlokaCategoryIcons.resolve(input.iconKey),
+                        color: AlokaColors.charcoal,
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            child: Text(
-                              input.categoryName,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                input.categoryName,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              AlokaPillBadge(
+                                text: isMandatory ? 'Wajib' : 'Opsional',
+                                backgroundColor: isMandatory
+                                    ? AlokaColors.mustardGold.withValues(alpha: 0.3)
+                                    : AlokaColors.surfaceSand,
+                              ),
+                              if (input.isFixedCost)
+                                const AlokaPillBadge(
+                                  text: 'Tetap',
+                                  backgroundColor: AlokaColors.pastelLime,
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          AlokaPillBadge(
-                            text: isMandatory ? 'Wajib' : 'Opsional',
-                            backgroundColor: isMandatory
-                                ? AlokaColors.mustardGold.withValues(alpha: 0.3)
-                                : AlokaColors.surfaceSand,
+                          const SizedBox(height: 4),
+                          Text(
+                            isActive
+                                ? 'Min ${FormatService.formatRupiah(input.minimumAmount)} • Target ${FormatService.formatRupiah(input.targetAmount)}'
+                                : 'Nonaktif (Alokasi Rp0)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
-                          if (input.isFixedCost) ...[
-                            const SizedBox(width: 4),
-                            const AlokaPillBadge(
-                              text: 'Biaya Tetap',
-                              backgroundColor: AlokaColors.pastelLime,
-                            ),
-                          ],
                         ],
                       ),
-                      const SizedBox(height: 4),
+                    ),
+                    if (!isMandatory)
+                      Switch(
+                        value: isActive,
+                        activeThumbColor: AlokaColors.charcoal,
+                        onChanged: onToggleActive,
+                      )
+                    else
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AlokaColors.textMuted,
+                        size: 20,
+                      ),
+                  ],
+                ),
+                if (isActive) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AlokaPillBadge.forPriority(input.priority),
                       Text(
-                        isActive
-                            ? 'Min: ${FormatService.formatRupiah(input.minimumAmount)} • Target: ${FormatService.formatRupiah(input.targetAmount)}'
-                            : 'Nonaktif (Alokasi Rp0)',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        'Atur Nilai',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AlokaColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ],
                   ),
-                ),
-                if (!isMandatory)
-                  Switch(
-                    value: isActive,
-                    activeThumbColor: AlokaColors.charcoal,
-                    onChanged: onToggleActive,
-                  ),
-                IconButton(
-                  onPressed: onTapEdit,
-                  icon: const Icon(Icons.tune_rounded, size: 20),
-                  tooltip: 'Atur Minimum, Target & Prioritas',
-                ),
+                ],
               ],
             ),
-            if (isActive) ...[
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AlokaPillBadge.forPriority(input.priority),
-                  GestureDetector(
-                    onTap: onTapEdit,
-                    child: Text(
-                      'Ubah Minimum & Target >',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AlokaColors.charcoal,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

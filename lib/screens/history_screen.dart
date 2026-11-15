@@ -41,9 +41,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AlokaColors.surfaceWhite,
-        title: const Text('Hapus Riwayat Optimasi?'),
+        title: const Text('Hapus Riwayat?'),
         content: Text(
-          'Riwayat "${item.planName}" (${FormatService.formatShortDate(item.createdAt)}) akan dihapus dari penyimpanan lokal perangkat.',
+          'Hapus "${item.planName}" (${FormatService.formatShortDate(item.createdAt)}) dari perangkat?',
         ),
         actions: [
           TextButton(
@@ -75,56 +75,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final current = _selectedResult;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 115),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 118),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 22),
         decoration: BoxDecoration(
           color: AlokaColors.background,
-          borderRadius: BorderRadius.circular(34),
+          borderRadius: BorderRadius.circular(32),
           border: Border.all(color: AlokaColors.borderSubtle, width: 1.2),
         ),
         child: Column(
           children: [
-            // Garis pegangan atas (top sheet handle bar) sesuai lingkaran biru referensi
+            // Handle bar atas
             Container(
-              width: 48,
+              width: 46,
               height: 4,
               decoration: BoxDecoration(
                 color: AlokaColors.charcoal,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
 
-            // 1. Ilustrasi Utama: assets/images/E-wallet-pana.png
-            // Dilengkapi errorBuilder fallback vektor retro-modern apabila file gambar belum disalin
+            // 1. Ilustrasi Utama
             SizedBox(
-              height: 195,
+              height: 170,
               child: Image.asset(
-                'assets/images/E-wallet-pana.png',
+                'assets/images/E-Wallet-pana.png',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Stack(
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        width: 155,
-                        height: 155,
+                        width: 140,
+                        height: 140,
                         decoration: const BoxDecoration(
                           color: AlokaColors.mustardGold,
                           shape: BoxShape.circle,
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.all(22),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: AlokaColors.terracotta,
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(26),
                         ),
                         child: const Icon(
                           Icons.account_balance_wallet_rounded,
-                          size: 64,
+                          size: 58,
                           color: AlokaColors.surfaceWhite,
                         ),
                       ),
@@ -133,25 +132,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            // 2. Judul Besar di Bawah Ilustrasi (seperti "Car Saving" pada lingkaran biru)
+            // 2. Judul Rencana Terpilih
             Text(
               current != null ? current.planName : 'Riwayat Optimasi',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    fontSize: 26,
+                    fontSize: 25,
                     fontWeight: FontWeight.w800,
                   ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
-            // 3. Lencana Nominal Dusty Blush Pink (#EBD5D0) seperti lencana "$2,300" di lingkaran biru
+            // 3. Lencana Nominal Dusty Blush Pink (#EBD5D0)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
               decoration: BoxDecoration(
                 color: AlokaColors.dustyBlush,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
                 current != null
@@ -164,14 +165,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // 4. Deretan 5 Tombol Aksi Persegi Membulat (mengacu pada Percents, Withdraw, Analytics, Convert, Receipt)
+            // 4. Deretan 5 Tombol Aksi Ringkas (tanpa terpotong '...')
             Row(
               children: [
                 AlokaQuickActionButton(
                   icon: Icons.percent_rounded,
-                  label: 'Pemenuhan',
+                  label: 'Hasil',
                   onTap: () {
                     if (current == null) return;
                     Navigator.push(
@@ -196,7 +197,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 AlokaQuickActionButton(
                   icon: Icons.analytics_outlined,
-                  label: 'Detail GA',
+                  label: 'Detail',
                   onTap: () {
                     if (current == null) return;
                     Navigator.push(
@@ -220,9 +221,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                            'Snapshot riwayat dimuat ke halaman Anggaran untuk simulasi baru tanpa mengubah riwayat lama.',
-                          ),
+                          content: Text('Snapshot dimuat ke halaman Anggaran.'),
                         ),
                       );
                     }
@@ -239,26 +238,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // 5. Daftar Kartu di Bagian Bawah (mengacu pada kartu Withdraw / Top Up di lingkaran biru)
+            // 5. Daftar Kartu Riwayat atau Pembagian Kategori
             if (historyList.isEmpty)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AlokaColors.surfaceWhite,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: Column(
                   children: [
                     Text(
-                      'Belum Ada Riwayat Optimasi',
+                      'Belum Ada Riwayat',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
-                      'Silakan buka menu Anggaran dan tekan tombol Optimalkan Alokasi untuk menyimpan hasil pertama Anda.',
+                      'Buka Anggaran lalu jalankan Optimalkan Alokasi.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
@@ -278,20 +277,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
               ...current.allocationSnapshot.map(
                 (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: _BlueCircleStyleRecordTile(
                     icon: AlokaCategoryIcons.resolve(item.iconKey),
-                    title: '${item.categoryName} (${item.status.label})',
+                    title: item.categoryName,
                     amountText: FormatService.formatRupiah(
                       item.allocatedAmount,
                       showPlusSign: item.isActive && item.allocatedAmount > 0,
                     ),
                     isPositiveHighlight:
                         item.status == TargetStatus.achieved && item.isActive,
-                    dateText:
-                        'Target ${FormatService.formatRupiah(item.targetAmount)}',
+                    dateText: item.status.label,
                     timeText:
-                        'Pemenuhan ${FormatService.formatPercentage(item.targetProgressRatio)}',
+                        '${FormatService.formatPercentage(item.targetProgressRatio)} • Target ${FormatService.formatRupiah(item.targetAmount)}',
                     isSelected: false,
                     onTap: () {},
                   ),
@@ -303,14 +301,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 final isSelected = idx == _selectedHistoryIndex;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: _BlueCircleStyleRecordTile(
                     icon: Icons.account_balance_wallet_rounded,
-                    title:
-                        '${item.planName} • Dialokasikan ${FormatService.formatRupiah(item.totalAllocated)}',
-                    amountText: item.unallocatedAmount > 0
-                        ? '+${FormatService.formatRupiah(item.unallocatedAmount)} Sisa'
-                        : FormatService.formatRupiah(item.totalAllocated),
+                    title: item.hasManualAdjustment
+                        ? '${item.planName} (Ubah)'
+                        : item.planName,
+                    amountText: FormatService.formatRupiah(item.totalAllocated),
                     isPositiveHighlight: item.unallocatedAmount > 0,
                     dateText: FormatService.formatShortDate(item.createdAt),
                     timeText:
@@ -341,9 +338,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-/// Kartu item riwayat bergaya identik dengan kartu di bawah lingkaran biru referensi:
-/// Kotak ikon Dusty Blush Pink di kiri, judul kecil + nominal tebal di tengah,
-/// serta tanggal & jam di sisi kanan.
+/// Kartu item riwayat
 class _BlueCircleStyleRecordTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -372,33 +367,32 @@ class _BlueCircleStyleRecordTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onDoubleTapOrOpen,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
           color: AlokaColors.surfaceWhite,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           border: isSelected
               ? Border.all(color: AlokaColors.mustardGold, width: 1.8)
               : null,
         ),
         child: Row(
           children: [
-            // Kotak ikon Dusty Blush Pink (#EBD5D0)
             Container(
-              width: 48,
-              height: 48,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 color: AlokaColors.dustyBlush,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(15),
               ),
               child: Icon(
                 icon,
                 color: AlokaColors.charcoal,
-                size: 22,
+                size: 21,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,18 +403,24 @@ class _BlueCircleStyleRecordTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AlokaColors.textSecondary,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    amountText,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: isPositiveHighlight
-                              ? const Color(0xFF4E8C22)
-                              : AlokaColors.charcoal,
-                        ),
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      amountText,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: isPositiveHighlight
+                                ? const Color(0xFF4E8C22)
+                                : AlokaColors.charcoal,
+                          ),
+                    ),
                   ),
                 ],
               ),
@@ -436,7 +436,7 @@ class _BlueCircleStyleRecordTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   timeText,
                   style: Theme.of(context).textTheme.bodySmall,

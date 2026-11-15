@@ -167,69 +167,84 @@ class AlokaTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Tombol kiri persegi membulat putih bergaya referensi
+        // Tombol kiri persegi membulat putih
         InkWell(
           onTap: onMenuTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            width: 46,
-            height: 46,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: AlokaColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
               Icons.notes_rounded,
               color: AlokaColors.charcoal,
-              size: 22,
+              size: 20,
             ),
           ),
         ),
-        // Nama aplikasi & subjudul tipis di tengah
-        Column(
-          children: [
-            Text(
-              fullname != null && fullname!.isNotEmpty ? fullname! : 'Aloka',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '@$username',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
+        const SizedBox(width: 10),
+        // Nama pengguna di tengah
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                fullname != null && fullname!.isNotEmpty ? fullname! : 'Aloka',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                '@$username',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
-        // Pojok kanan atas: "Halo, [username]" beserta tombol ikon profil
-        InkWell(
-          onTap: onProfileTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AlokaColors.surfaceWhite,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Halo, $username',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.person_outline_rounded,
-                  size: 18,
-                  color: AlokaColors.charcoal,
-                ),
-              ],
+        const SizedBox(width: 10),
+        // Pojok kanan atas: "Halo, [username]" beserta ikon profil
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 132),
+          child: InkWell(
+            onTap: onProfileTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+              decoration: BoxDecoration(
+                color: AlokaColors.surfaceWhite,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Halo, $username',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  const Icon(
+                    Icons.person_outline_rounded,
+                    size: 17,
+                    color: AlokaColors.charcoal,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -238,7 +253,7 @@ class AlokaTopBar extends StatelessWidget {
   }
 }
 
-/// Tombol aksi persegi membulat (Rounded Square Action Tile) seperti pada referensi Beranda & Riwayat
+/// Tombol aksi persegi membulat (Rounded Square Action Tile)
 class AlokaQuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -259,15 +274,15 @@ class AlokaQuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 3),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 3),
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -277,20 +292,23 @@ class AlokaQuickActionButton extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: AlokaColors.background,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Icon(icon, size: 19, color: iconColor),
+                  child: Icon(icon, size: 18, color: iconColor),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AlokaColors.charcoal,
-                        fontWeight: FontWeight.w600,
-                      ),
+                const SizedBox(height: 7),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AlokaColors.charcoal,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
                 ),
               ],
             ),
@@ -319,32 +337,33 @@ class AlokaHorizontalProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clamped = ratio.clamp(0.0, 1.0);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
-        final barWidth = (maxWidth * clamped).clamp(0.0, maxWidth);
-        return Container(
-          height: height,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: trackColor,
-            borderRadius: BorderRadius.circular(height),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              width: barWidth,
-              height: height,
-              decoration: BoxDecoration(
-                color: activeColor,
-                borderRadius: BorderRadius.circular(height),
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: trackColor,
+        borderRadius: BorderRadius.circular(height),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: clamped),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          builder: (context, animatedRatio, _) {
+            return FractionallySizedBox(
+              widthFactor: animatedRatio.clamp(0.0, 1.0),
+              heightFactor: 1.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: activeColor,
+                  borderRadius: BorderRadius.circular(height),
+                ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
