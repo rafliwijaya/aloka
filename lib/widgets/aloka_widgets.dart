@@ -149,12 +149,15 @@ class _NavItemSpec {
   });
 }
 
-/// Header halaman dengan tombol ikon kiri, sapaan/judul tengah, dan teks "Halo, [username]" di kanan atas
+/// Header halaman dengan tombol hamburger menu navigasi di kiri, logo gambar Aloka di tengah,
+/// dan teks "Halo, [username]" di kanan atas.
 class AlokaTopBar extends StatelessWidget {
   final String username;
   final String? fullname;
   final VoidCallback? onProfileTap;
   final VoidCallback? onMenuTap;
+  final int currentNavIndex;
+  final ValueChanged<int>? onSelectNavIndex;
 
   const AlokaTopBar({
     super.key,
@@ -162,16 +165,98 @@ class AlokaTopBar extends StatelessWidget {
     this.fullname,
     this.onProfileTap,
     this.onMenuTap,
+    this.currentNavIndex = 0,
+    this.onSelectNavIndex,
   });
+
+  static const List<_NavItemSpec> _menuItems = <_NavItemSpec>[
+    _NavItemSpec(
+      label: 'Beranda',
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home_rounded,
+    ),
+    _NavItemSpec(
+      label: 'Anggaran',
+      icon: Icons.account_balance_wallet_outlined,
+      activeIcon: Icons.account_balance_wallet_rounded,
+    ),
+    _NavItemSpec(
+      label: 'Riwayat',
+      icon: Icons.pie_chart_outline_rounded,
+      activeIcon: Icons.pie_chart_rounded,
+    ),
+    _NavItemSpec(
+      label: 'Profil',
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Tombol kiri persegi membulat putih
-        InkWell(
-          onTap: onMenuTap,
-          borderRadius: BorderRadius.circular(16),
+        // Tombol kiri hamburger menu yang memunculkan navbar box kecil
+        PopupMenuButton<int>(
+          tooltip: 'Menu Navigasi',
+          offset: const Offset(0, 48),
+          elevation: 8,
+          color: AlokaColors.surfaceWhite,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          constraints: const BoxConstraints(
+            minWidth: 140,
+            maxWidth: 160,
+          ),
+          onSelected: (index) {
+            if (onSelectNavIndex != null) {
+              onSelectNavIndex!(index);
+            } else {
+              onMenuTap?.call();
+            }
+          },
+          itemBuilder: (context) {
+            return List.generate(_menuItems.length, (index) {
+              final item = _menuItems[index];
+              final isSelected = currentNavIndex == index;
+              return PopupMenuItem<int>(
+                value: index,
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AlokaColors.mustardGold
+                            : AlokaColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        isSelected ? item.activeIcon : item.icon,
+                        size: 16,
+                        color: AlokaColors.charcoal,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      item.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AlokaColors.charcoal,
+                            fontSize: 13,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                    ),
+                  ],
+                ),
+              );
+            });
+          },
           child: Container(
             width: 44,
             height: 44,
@@ -180,34 +265,21 @@ class AlokaTopBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(
-              Icons.notes_rounded,
+              Icons.menu_rounded,
               color: AlokaColors.charcoal,
               size: 20,
             ),
           ),
         ),
         const SizedBox(width: 10),
-        // Nama pengguna di tengah
+        // Gambar judul Aloka di tengah
         Expanded(
-          child: Column(
-            children: [
-              Text(
-                fullname != null && fullname!.isNotEmpty ? fullname! : 'Aloka',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                '@$username',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+          child: Center(
+            child: Image.asset(
+              'assets/images/aloka-title.png',
+              height: 28,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         const SizedBox(width: 10),

@@ -4,6 +4,7 @@ import 'screens/history_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/optimization_result_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/splash_screen.dart';
 import 'state/aloka_controller.dart';
 import 'theme/app_theme.dart';
 import 'widgets/aloka_widgets.dart';
@@ -41,7 +42,9 @@ class _AlokaAppState extends State<AlokaApp> {
       title: 'Aloka',
       debugShowCheckedModeBanner: false,
       theme: AlokaTheme.lightTheme,
-      home: AlokaMainShell(controller: _controller),
+      home: AlokaSplashScreen(
+        nextPage: AlokaMainShell(controller: _controller),
+      ),
     );
   }
 }
@@ -60,39 +63,30 @@ class AlokaMainShell extends StatelessWidget {
     required this.controller,
   });
 
-  Future<void> _handleTriggerOptimization(BuildContext context) async {
-    final check = controller.feasibilityReport;
-    if (!check.isFeasible) {
-      controller.setSelectedNavIndex(1);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AlokaColors.terracotta,
-          content: Text(check.summaryMessage),
+  void _handleOpenLatestOptimization(BuildContext context) {
+    final latest = controller.latestResult;
+    if (latest != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OptimizationResultScreen(
+            controller: controller,
+            result: latest,
+          ),
         ),
       );
       return;
     }
 
-    try {
-      final result = await controller.runGeneticOptimization();
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => OptimizationResultScreen(
-              controller: controller,
-              result: result,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    }
+    controller.setSelectedNavIndex(1);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: AlokaColors.charcoal,
+        content: Text(
+          'Belum ada hasil optimasi. Silakan klik "Optimalkan Alokasi" di halaman Anggaran.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -114,7 +108,7 @@ class AlokaMainShell extends StatelessWidget {
         final pages = <Widget>[
           HomeScreen(
             controller: controller,
-            onStartOptimization: () => _handleTriggerOptimization(context),
+            onStartOptimization: () => _handleOpenLatestOptimization(context),
           ),
           BudgetScreen(
             controller: controller,

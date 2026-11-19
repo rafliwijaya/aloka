@@ -37,10 +37,12 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Header Atas dengan "Halo, [username]"
+          // 1. Header Atas dengan Hamburger Menu, Gambar Judul Aloka, dan "Halo, [username]"
           AlokaTopBar(
             username: controller.userProfile.username,
             fullname: controller.userProfile.fullname,
+            currentNavIndex: controller.selectedNavIndex,
+            onSelectNavIndex: controller.setSelectedNavIndex,
             onMenuTap: () => controller.setSelectedNavIndex(1),
             onProfileTap: () => controller.setSelectedNavIndex(3),
           ),
@@ -154,9 +156,11 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 7. Ringkasan Kebutuhan Wajib
+          // 7. Alokasi Kebutuhan (Seluruh kategori aktif beserta nominal hasil optimasi GA)
           _MandatorySummarySection(
-            mandatoryInputs: controller.mandatoryInputs,
+            activeInputs: controller.categoryInputs
+                .where((c) => c.isActive)
+                .toList(),
             latestResult: latest,
             onEditBudget: () => controller.setSelectedNavIndex(1),
           ),
@@ -477,7 +481,7 @@ class _LimeAllocationStatusCard extends StatelessWidget {
                     Text(
                       hasResult
                           ? 'Skor $fitnessPct • ${latestResult!.achievedAllocations.length}/${latestResult!.activeAllocations.length} target tercapai'
-                          : 'Belum dioptimasi • Ketuk panah untuk mulai',
+                          : 'Belum dioptimasi • Optimalkan lewat halaman Anggaran',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AlokaColors.charcoal,
                             fontWeight: FontWeight.w600,
@@ -547,12 +551,12 @@ class _MiniBadgePill extends StatelessWidget {
 }
 
 class _MandatorySummarySection extends StatelessWidget {
-  final List<PlanCategoryInput> mandatoryInputs;
+  final List<PlanCategoryInput> activeInputs;
   final OptimizationResult? latestResult;
   final VoidCallback onEditBudget;
 
   const _MandatorySummarySection({
-    required this.mandatoryInputs,
+    required this.activeInputs,
     required this.latestResult,
     required this.onEditBudget,
   });
@@ -572,7 +576,7 @@ class _MandatorySummarySection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Ringkasan Kebutuhan Wajib',
+                'Alokasi Kebutuhan',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               TextButton(
@@ -587,7 +591,7 @@ class _MandatorySummarySection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          ...mandatoryInputs.map((item) {
+          ...activeInputs.map((item) {
             final allocatedItem = latestResult?.allocationSnapshot
                 .where((a) => a.categoryId == item.categoryId)
                 .firstOrNull;

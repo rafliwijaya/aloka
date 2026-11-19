@@ -96,7 +96,9 @@ class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
                 20,
                 20,
                 20,
-                MediaQuery.of(ctx).viewInsets.bottom + 24,
+                MediaQuery.of(ctx).viewInsets.bottom +
+                    MediaQuery.of(ctx).viewPadding.bottom +
+                    36,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -126,8 +128,9 @@ class _OptimizationResultScreenState extends State<OptimizationResultScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 24),
                     child: ElevatedButton(
                       onPressed: () async {
                         final parsed =

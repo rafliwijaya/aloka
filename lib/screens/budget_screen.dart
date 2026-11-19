@@ -49,7 +49,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 20,
                 20,
                 20,
-                MediaQuery.of(ctx).viewInsets.bottom + 24,
+                MediaQuery.of(ctx).viewInsets.bottom +
+                    MediaQuery.of(ctx).viewPadding.bottom +
+                    36,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -85,8 +87,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 24),
                     child: ElevatedButton(
                       onPressed: () async {
                         final parsed = FormatService.parseRupiahInput(budgetCtrl.text);
@@ -140,152 +143,157 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 20,
                 20,
                 20,
-                MediaQuery.of(ctx).viewInsets.bottom + 24,
+                MediaQuery.of(ctx).viewInsets.bottom +
+                    MediaQuery.of(ctx).viewPadding.bottom +
+                    36,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Atur ${input.categoryName}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(ctx).textTheme.titleLarge,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Atur ${input.categoryName}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(ctx).textTheme.titleLarge,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        AlokaPillBadge(
+                          text: input.categoryType.label,
+                          backgroundColor: input.categoryType == CategoryType.mandatory
+                              ? AlokaColors.mustardGold
+                              : AlokaColors.dustyBlush,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'Biaya Tetap (Min = Target)',
+                        style: Theme.of(ctx).textTheme.titleSmall,
+                      ),
+                      subtitle: Text(
+                        'Nominal pasti seperti paket internet.',
+                        style: Theme.of(ctx).textTheme.bodySmall,
+                      ),
+                      value: isFixedCost,
+                      activeThumbColor: AlokaColors.charcoal,
+                      onChanged: (val) {
+                        setModalState(() {
+                          isFixedCost = val;
+                          if (isFixedCost) {
+                            minCtrl.text = targetCtrl.text;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    if (!isFixedCost) ...[
+                      TextField(
+                        controller: minCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: input.categoryType == CategoryType.mandatory
+                              ? 'Minimum Alokasi Wajib (Rp)'
+                              : 'Minimum Alokasi Opsional (Default Rp0)',
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      AlokaPillBadge(
-                        text: input.categoryType.label,
-                        backgroundColor: input.categoryType == CategoryType.mandatory
-                            ? AlokaColors.mustardGold
-                            : AlokaColors.dustyBlush,
-                      ),
+                      const SizedBox(height: 12),
                     ],
-                  ),
-                  const SizedBox(height: 10),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      'Biaya Tetap (Min = Target)',
+                    TextField(
+                      controller: targetCtrl,
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        if (isFixedCost) {
+                          minCtrl.text = val;
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Target Alokasi (Rp)',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Tingkat Prioritas Pemenuhan Target',
                       style: Theme.of(ctx).textTheme.titleSmall,
                     ),
-                    subtitle: Text(
-                      'Nominal pasti seperti paket internet.',
-                      style: Theme.of(ctx).textTheme.bodySmall,
-                    ),
-                    value: isFixedCost,
-                    activeThumbColor: AlokaColors.charcoal,
-                    onChanged: (val) {
-                      setModalState(() {
-                        isFixedCost = val;
-                        if (isFixedCost) {
-                          minCtrl.text = targetCtrl.text;
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  if (!isFixedCost) ...[
-                    TextField(
-                      controller: minCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: input.categoryType == CategoryType.mandatory
-                            ? 'Minimum Alokasi Wajib (Rp)'
-                            : 'Minimum Alokasi Opsional (Default Rp0)',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  TextField(
-                    controller: targetCtrl,
-                    keyboardType: TextInputType.number,
-                    onChanged: (val) {
-                      if (isFixedCost) {
-                        minCtrl.text = val;
-                      }
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Target Alokasi (Rp)',
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Tingkat Prioritas Pemenuhan Target',
-                    style: Theme.of(ctx).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: PriorityLevel.values.map((prio) {
-                      final selected = selectedPriority == prio;
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text(prio.label),
-                            selected: selected,
-                            selectedColor: AlokaColors.mustardGold,
-                            backgroundColor: AlokaColors.surfaceWhite,
-                            onSelected: (_) {
-                              setModalState(() => selectedPriority = prio);
-                            },
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if (errorMsg != null) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      errorMsg!,
-                      style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                            color: AlokaColors.terracotta,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final targetVal = FormatService.parseRupiahInput(targetCtrl.text);
-                        final minVal = isFixedCost
-                            ? targetVal
-                            : FormatService.parseRupiahInput(minCtrl.text);
-
-                        if (minVal == null || targetVal == null || minVal < 0 || targetVal < 0) {
-                          setModalState(() {
-                            errorMsg = 'Nominal minimum dan target harus berupa angka bulat Rupiah tidak negatif.';
-                          });
-                          return;
-                        }
-                        if (targetVal < minVal) {
-                          setModalState(() {
-                            errorMsg = 'Target alokasi tidak boleh lebih kecil daripada batas minimum (${FormatService.formatRupiah(minVal)}).';
-                          });
-                          return;
-                        }
-
-                        await widget.controller.updateCategoryInput(
-                          input.copyWith(
-                            minimumAmount: minVal,
-                            targetAmount: targetVal,
-                            priority: selectedPriority,
-                            priorityWeight: selectedPriority.defaultWeight,
-                            isFixedCost: isFixedCost,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: PriorityLevel.values.map((prio) {
+                        final selected = selectedPriority == prio;
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: ChoiceChip(
+                              label: Text(prio.label),
+                              selected: selected,
+                              selectedColor: AlokaColors.mustardGold,
+                              backgroundColor: AlokaColors.surfaceWhite,
+                              onSelected: (_) {
+                                setModalState(() => selectedPriority = prio);
+                              },
+                            ),
                           ),
                         );
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      child: const Text('Simpan Konfigurasi Kategori'),
+                      }).toList(),
                     ),
-                  ),
-                ],
+                    if (errorMsg != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        errorMsg!,
+                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                              color: AlokaColors.terracotta,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 28),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final targetVal = FormatService.parseRupiahInput(targetCtrl.text);
+                          final minVal = isFixedCost
+                              ? targetVal
+                              : FormatService.parseRupiahInput(minCtrl.text);
+
+                          if (minVal == null || targetVal == null || minVal < 0 || targetVal < 0) {
+                            setModalState(() {
+                              errorMsg = 'Nominal minimum dan target harus berupa angka bulat Rupiah tidak negatif.';
+                            });
+                            return;
+                          }
+                          if (targetVal < minVal) {
+                            setModalState(() {
+                              errorMsg = 'Target alokasi tidak boleh lebih kecil daripada batas minimum (${FormatService.formatRupiah(minVal)}).';
+                            });
+                            return;
+                          }
+
+                          await widget.controller.updateCategoryInput(
+                            input.copyWith(
+                              minimumAmount: minVal,
+                              targetAmount: targetVal,
+                              priority: selectedPriority,
+                              priorityWeight: selectedPriority.defaultWeight,
+                              isFixedCost: isFixedCost,
+                            ),
+                          );
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text('Simpan Konfigurasi Kategori'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -327,7 +335,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 20,
                 20,
                 20,
-                MediaQuery.of(ctx).viewInsets.bottom + 24,
+                MediaQuery.of(ctx).viewInsets.bottom +
+                    MediaQuery.of(ctx).viewPadding.bottom +
+                    36,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -452,8 +462,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    SizedBox(
+                    Container(
                       width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 28),
                       child: ElevatedButton(
                         onPressed: () async {
                           final minVal = FormatService.parseRupiahInput(minCtrl.text);
@@ -511,7 +522,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 140),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -603,8 +614,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
           const SizedBox(height: 10),
 
           // Tombol Utama Optimasi GA
-          SizedBox(
+          Container(
             width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 32),
             child: ElevatedButton.icon(
               onPressed: feasibility.isFeasible && !widget.controller.isOptimizing
                   ? () async {
